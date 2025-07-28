@@ -1,0 +1,406 @@
+# HeadcountSync Development Rules for Claude
+
+## Project Overview
+HeadcountSync is a headcount and allocation management tool for engineering teams that visualizes workload across projects with Jira integration. This document defines the authoritative development rules and patterns Claude must follow.
+
+## 🎯 Context Engineering Philosophy
+
+### Core Principles
+- **Context determines success** - Comprehensive context enables one-pass implementation
+- **Patterns guide implementation** - AI mirrors existing codebase quality  
+- **Validation enables autonomy** - Multiple validation levels ensure correctness
+- **Progressive enhancement** - Start simple, validate, then enhance
+
+### PRP Framework Integration
+This project uses the PRP (Product Requirement Prompt) methodology:
+- **Major features** (story-level+): Use `/prp-base-create` 
+- **Bug fixes/small tasks**: Standard implementation
+- **Always reference** `headcount-prd.md` for requirements
+
+## 🤖 AI Assistant Guidelines
+
+### Context Awareness
+- When implementing features, ALWAYS check existing patterns first
+- Reference headcount-prd.md sections for specific requirements
+- Use existing components from shadcn/ui before creating new ones
+- Check similar features in codebase before implementing
+
+### Search Command Requirements
+**CRITICAL**: Always use `rg` (ripgrep) instead of `grep`:
+```bash
+# ❌ Don't use
+grep -r "allocation" .
+find . -name "*.js"
+
+# ✅ Use instead
+rg "allocation"
+rg --files -g "*.js"
+```
+
+### Workflow Patterns
+- Create comprehensive plan with TodoWrite before coding
+- Break complex tasks into smaller validation checkpoints
+- Test each component as you build
+- Run validation gates before marking complete
+
+## 🧠 ULTRATHINK Methodology
+
+Before implementing ANY feature, Claude must:
+1. **Analyze**: Review all related code, patterns, and documentation
+2. **Plan**: Create comprehensive task breakdown with dependencies
+3. **Validate**: Check plan against existing patterns and anti-patterns
+4. **Execute**: Implement with validation at each step
+5. **Verify**: Run all validation gates before marking complete
+
+## 🎯 Core Engineering Principles
+
+### KISS (Keep It Simple, Stupid)
+- **NO premature abstractions** - Build features directly first, abstract only after patterns emerge 3+ times
+- **NO over-engineering** - Optimize for fast iteration and low cognitive overhead
+- **Prefer explicit over clever** - Code should be immediately understandable
+
+### DRY (Don't Repeat Yourself)
+- Extract shared UI patterns into atomic components after 3 uses
+- Create utility functions for repeated business logic
+- Use composables/hooks for shared stateful logic
+
+### MVP First
+- **NO TypeScript** in initial implementation - Use modern ES6+ JavaScript only
+- Focus on working features over perfect architecture
+- Ship fast, refactor based on real usage patterns
+
+## 🧱 Code Structure & Modularity
+
+### File and Component Limits
+- **Never create files longer than 500 lines** - Split into modules if approaching limit
+- **Components under 200 lines** - Refactor if larger
+- **Functions under 50 lines** - Single responsibility principle
+- **Organize by feature** - Group related functionality
+
+### When to Extract
+- After 3 uses of similar pattern
+- When file approaches size limit
+- When component has multiple responsibilities
+- When testing becomes complex
+
+## 🏗️ Technology Stack (MANDATORY)
+
+### Framework: Next.js 14+ (App Router)
+```javascript
+// ✅ CORRECT: App Router pattern
+// app/allocations/page.js
+export default function AllocationsPage() {
+  return <AllocationsDashboard />;
+}
+
+// ❌ WRONG: Pages Router (legacy)
+// pages/allocations.js
+```
+
+### UI Components: shadcn/ui + Radix UI
+```javascript
+// ✅ CORRECT: Using shadcn components
+import { Button } from "@/components/ui/button";
+import { Table } from "@/components/ui/table";
+
+// ❌ WRONG: Direct Radix or other UI libraries
+import * as Select from '@radix-ui/react-select';
+```
+
+### Styling: Tailwind CSS (ONLY)
+```javascript
+// ✅ CORRECT: Tailwind utilities
+<div className="flex gap-4 p-6 bg-gray-50 rounded-lg">
+
+// ❌ WRONG: CSS modules, styled-components, or inline styles
+<div style={{ display: 'flex', gap: '1rem' }}>
+```
+
+### State Management Rules
+
+#### API/Server State: TanStack Query (React Query)
+```javascript
+// ✅ CORRECT: All API calls use TanStack Query
+export function useEngineers() {
+  return useQuery({
+    queryKey: ['engineers'],
+    queryFn: fetchEngineers,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// ❌ WRONG: Direct fetch in components
+useEffect(() => {
+  fetch('/api/engineers').then(...);
+}, []);
+```
+
+#### Global UI State: Zustand (only when truly needed)
+- Use for filters, modals, UI preferences
+- NOT for server data (use TanStack Query)
+
+### Data Validation: Zod (MANDATORY)
+All API inputs/outputs MUST be validated
+
+## 📁 Project Structure (MANDATORY)
+
+```
+src/
+├── app/                      # Next.js App Router
+│   ├── (dashboard)/          # Route group for authenticated pages
+│   ├── api/                  # API routes
+│   └── layout.js             # Root layout
+├── components/               
+│   ├── ui/                   # shadcn/ui components (DO NOT MODIFY)
+│   ├── features/             # Feature-specific components
+│   └── shared/               # Shared components
+├── lib/                      
+│   ├── api/                  # API utilities
+│   ├── db/                   # Database queries
+│   ├── hooks/                # Custom React hooks
+│   ├── stores/               # Zustand stores
+│   ├── utils/                # Utility functions
+│   └── schemas/              # Zod schemas
+├── ai_docs/                  # Curated documentation for Claude
+└── PRPs/                     # Product Requirement Prompts
+```
+
+## ✅ Progressive Validation Gates
+
+### Level 1: Syntax & Linting
+```bash
+npm run lint
+npm run format:check
+# Must pass with 0 errors/warnings
+```
+
+### Level 2: Unit Tests
+```bash
+npm run test:unit
+# Coverage must be >80%
+# All business logic must have tests
+```
+
+### Level 3: Integration Tests
+```bash
+npm run test:integration
+# Test Jira sync functionality
+# Test allocation calculations
+# Test API endpoints
+```
+
+### Level 4: E2E Tests
+```bash
+npm run test:e2e
+# Playwright for critical user flows
+# Test allocation editing
+# Test filtering
+```
+
+### Level 5: Deployment Validation
+```bash
+npm run build
+npm run start
+# Manual smoke test
+# Verify in browser: http://localhost:3000
+```
+
+## 📚 PRP Methodology
+
+### When Creating PRPs
+1. **Context Assembly**: Include all patterns, gotchas, references
+2. **Goal Definition**: Clear end state with acceptance criteria
+3. **Implementation Blueprint**: Step-by-step with exact file paths
+4. **Validation Framework**: Executable tests at all levels
+
+### Context Requirements
+- Include existing patterns from codebase
+- Reference specific files and line numbers  
+- Document known gotchas (e.g., part-time capacity calculation)
+- Provide all validation commands
+- Include wireframe references from headcount-prd.md
+
+### Execution Best Practices
+- **ALWAYS use new Claude instance** between PRP creation and execution
+- Monitor for multi-context window operations
+- Provide real-time guidance during execution
+- Move completed PRPs to PRPs/completed/
+
+## 📝 Documentation Standards
+
+### Component Documentation
+```javascript
+/**
+ * AllocationBar - Visualizes engineer project allocations
+ * 
+ * Displays horizontal stacked bars with project percentages.
+ * Includes status indicators for optimal/warning/error states.
+ * 
+ * @component
+ * @example
+ * <AllocationBar 
+ *   allocations={[{projectId: 'p1', percentage: 60}]}
+ *   capacity={40}
+ * />
+ */
+```
+
+### Function Documentation
+```javascript
+/**
+ * Calculates total allocation percentage for an engineer
+ * @param {Array} allocations - Array of allocation objects
+ * @returns {number} Total percentage (can exceed 100)
+ */
+function calculateTotalAllocation(allocations) {
+  return allocations.reduce((sum, a) => sum + a.percentage, 0);
+}
+```
+
+## 🔄 Development Commands
+
+### PRP Execution
+```bash
+# For new features
+/prp-base-create Build allocation dashboard based on headcount-prd.md section 2.3
+
+# Review generated PRP
+cat PRPs/allocation-dashboard.md
+
+# Execute in NEW Claude instance
+/prp-base-execute PRPs/allocation-dashboard.md
+```
+
+### Validation Commands
+```bash
+# Run all checks (before committing)
+npm run validate
+
+# Individual checks
+npm run lint:fix
+npm run test
+npm run build
+```
+
+## 📋 Git Workflow & Conventions
+
+### Branch Naming
+```bash
+feature/add-gantt-view
+bugfix/fix-allocation-overflow
+refactor/extract-jira-client
+chore/update-dependencies
+```
+
+### Commit Messages
+```bash
+# ✅ CORRECT
+feat: add weekly view toggle to allocation dashboard
+fix: resolve allocation calculation for part-time engineers
+refactor: extract allocation bar into reusable component
+
+# ❌ WRONG
+Updated files
+Fix bug
+WIP
+```
+
+## 🚫 Anti-Patterns to Avoid
+
+### From PRP Framework
+- ❌ Minimal context in implementations
+- ❌ Skipping validation loops  
+- ❌ Ignoring structured PRP format
+- ❌ Creating new patterns when existing work
+- ❌ Direct implementation without planning
+
+### Project-Specific
+- ❌ Using any UI library other than shadcn/ui
+- ❌ Direct database queries in components
+- ❌ Direct Jira API calls without error handling
+- ❌ Allocation calculations without validation
+- ❌ UI components without loading/error states
+- ❌ Missing part-time capacity edge cases
+- ❌ Client-side data fetching without TanStack Query
+- ❌ Over-engineering for imaginary scale
+
+## 🎯 Success Patterns
+
+### Implementation Strategy
+1. **Start with simplest implementation**
+2. **Validate it works**
+3. **Then enhance incrementally**
+4. **Each step must pass validation**
+
+### Common Success Indicators
+- Tests pass on first run
+- No console errors
+- Loading states work correctly
+- Error boundaries catch failures
+- Validation prevents bad data
+
+## 📊 Quality Metrics
+
+### PRP Success Scoring (1-10)
+- **Context Richness**: Comprehensive documentation included
+- **Implementation Clarity**: Clear path to completion
+- **Validation Completeness**: All levels covered
+- **One-Pass Success**: Confidence in autonomous completion
+
+Target: 8+ on all metrics
+
+### Code Quality Metrics
+- Test Coverage: >80%
+- Component Size: <200 lines
+- Function Complexity: <10 (cyclomatic)
+- Build Time: <60 seconds
+- Bundle Size: Monitor for regressions
+
+## 🎯 MVP Features Checklist
+
+Essential features for HeadcountSync MVP:
+
+- [ ] Engineer roster with CRUD operations
+- [ ] Project allocation visualization (bar + percentage)
+- [ ] Inline allocation editing
+- [ ] Jira PAT integration for auto-sync
+- [ ] Weekly/Monthly view toggle
+- [ ] Team/Project/Allocation filters
+- [ ] Basic admin authentication
+- [ ] Export to CSV functionality
+- [ ] Allocation validation (under/over indicators)
+- [ ] Manual allocation override
+
+## 📖 AI Documentation Directory (ai_docs/)
+
+Store curated documentation for Claude context:
+
+### Required Documentation Files
+- `jira-api-v3.md` - Jira REST API v3 documentation
+- `kibo-ui-gantt.md` - Gantt component API and examples
+- `nextjs-patterns.md` - Next.js App Router best practices
+- `tanstack-query.md` - React Query patterns and caching
+- `shadcn-ui.md` - Component library usage guide
+
+### Documentation Format
+```markdown
+# [Library Name] Documentation
+
+## Overview
+[Brief description and when to use]
+
+## Key Patterns
+[Common usage patterns with code examples]
+
+## Gotchas
+[Known issues and workarounds]
+
+## HeadcountSync Usage
+[Specific examples from our codebase]
+```
+
+---
+
+**Remember**: This is an MVP. Ship fast, gather feedback, iterate. Focus on core functionality that helps engineering managers visualize and manage team allocations effectively.
+
+**Context is King**: Every implementation must have comprehensive context. When in doubt, add more context rather than less. The PRP framework is your guide to one-pass implementation success.
