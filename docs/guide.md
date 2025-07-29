@@ -547,6 +547,15 @@ Monitor for improvement:
 
 ---
 
-**Remember**: The goal is one-pass implementation success through comprehensive context. The PRP framework provides the methodology, your CLAUDE.md provides the rules, and together they enable autonomous AI development.
+**Remember**: The goal is one-pass implementation success through comprehensive context.
+
+## Templates and Resources
+
+All project templates are now organized in:
+- **Templates**: `/docs/templates/`
+- **Master Guide**: `/docs/master-guide.md`
+- **Examples**: See HeadcountSync in `/forge/examples/`
+
+Start with the [Master Guide](./master-guide.md) for a complete overview of all resources. The PRP framework provides the methodology, your CLAUDE.md provides the rules, and together they enable autonomous AI development.
 
 **Critical Success Factor**: Context is King - more context = better results.
