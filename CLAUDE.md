@@ -10,7 +10,7 @@ This is a **PRP (Product Requirement Prompt) Framework** repository, not a tradi
 
 ### Command-Driven System
 
-- **28+ pre-configured Claude Code commands** in `.claude/commands/`
+- **pre-configured Claude Code commands** in `.claude/commands/`
 - Commands organized by function:
   - `PRPs/` - PRP creation and execution workflows
   - `development/` - Core development utilities (prime-core, onboarding, debug)

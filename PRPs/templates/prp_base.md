@@ -1,22 +1,25 @@
-name: "Base PRP Template v2 - Context-Rich with Validation Loops"
+name: "Base PRP Template v3 - Implementation-Focused with Precision Standards"
 description: |
-
-## Purpose
-
-Template optimized for AI agents to implement features with sufficient context and self-validation capabilities to achieve working code through iterative refinement.
-
-## Core Principles
-
-1. **Context is King**: Include ALL necessary documentation, examples, and caveats
-2. **Validation Loops**: Provide executable tests/lints the AI can run and fix
-3. **Information Dense**: Use keywords and patterns from the codebase
-4. **Progressive Success**: Start simple, validate, then enhance
 
 ---
 
 ## Goal
 
-[What needs to be built - be specific about the end state and desires]
+**Feature Goal**: [Specific, measurable end state of what needs to be built]
+
+**Deliverable**: [Concrete artifact - API endpoint, service class, integration, etc.]
+
+**Success Definition**: [How you'll know this is complete and working]
+
+## User Persona (if applicable)
+
+**Target User**: [Specific user type - developer, end user, admin, etc.]
+
+**Use Case**: [Primary scenario when this feature will be used]
+
+**User Journey**: [Step-by-step flow of how user interacts with this feature]
+
+**Pain Points Addressed**: [Specific user frustrations this feature solves]
 
 ## Why
 
@@ -34,22 +37,26 @@ Template optimized for AI agents to implement features with sufficient context a
 
 ## All Needed Context
 
-### Documentation & References (list all context needed to implement the feature)
+### Context Completeness Check
+
+_Before writing this PRP, validate: "If someone knew nothing about this codebase, would they have everything needed to implement this successfully?"_
+
+### Documentation & References
 
 ```yaml
 # MUST READ - Include these in your context window
-- url: [Official API docs URL]
-  why: [Specific sections/methods you'll need]
+- url: [Complete URL with section anchor]
+  why: [Specific methods/concepts needed for implementation]
+  critical: [Key insights that prevent common implementation errors]
 
-- file: [path/to/example.py]
-  why: [Pattern to follow, gotchas to avoid]
+- file: [exact/path/to/pattern/file.py]
+  why: [Specific pattern to follow - class structure, error handling, etc.]
+  pattern: [Brief description of what pattern to extract]
+  gotcha: [Known constraints or limitations to avoid]
 
-- doc: [Library documentation URL]
-  section: [Specific section about common pitfalls]
-  critical: [Key insight that prevents common errors]
-
-- docfile: [PRPs/ai_docs/file.md]
-  why: [docs that the user has pasted in to the project]
+- docfile: [PRPs/ai_docs/domain_specific.md]
+  why: [Custom documentation for complex library/integration patterns]
+  section: [Specific section if document is large]
 ```
 
 ### Current Codebase tree (run `tree` in the root of the project) to get an overview of the codebase
@@ -70,7 +77,6 @@ Template optimized for AI agents to implement features with sufficient context a
 # CRITICAL: [Library name] requires [specific setup]
 # Example: FastAPI requires async functions for endpoints
 # Example: This ORM doesn't support batch inserts over 1000 records
-# Example: We use pydantic v2 and
 ```
 
 ## Implementation Blueprint
@@ -88,50 +94,71 @@ Examples:
 
 ```
 
-### List of tasks to be completed to fulfill the PRP in the order they should be completed
+### Implementation Tasks (ordered by dependencies)
 
 ```yaml
-Task 1:
-MODIFY src/existing_module.py:
-  - FIND pattern: "class OldImplementation"
-  - INJECT after line containing "def __init__"
-  - PRESERVE existing method signatures
+Task 1: CREATE src/models/{domain}_models.py
+  - IMPLEMENT: {SpecificModel}Request, {SpecificModel}Response Pydantic models
+  - FOLLOW pattern: src/models/existing_model.py (field validation approach)
+  - NAMING: CamelCase for classes, snake_case for fields
+  - PLACEMENT: Domain-specific model file in src/models/
 
-CREATE src/new_feature.py:
-  - MIRROR pattern from: src/similar_feature.py
-  - MODIFY class name and core logic
-  - KEEP error handling pattern identical
+Task 2: CREATE src/services/{domain}_service.py
+  - IMPLEMENT: {Domain}Service class with async methods
+  - FOLLOW pattern: src/services/database_service.py (service structure, error handling)
+  - NAMING: {Domain}Service class, async def create_*, get_*, update_*, delete_* methods
+  - DEPENDENCIES: Import models from Task 1
+  - PLACEMENT: Service layer in src/services/
 
-...(...)
+Task 3: CREATE src/tools/{action}_{resource}.py
+  - IMPLEMENT: MCP tool wrapper calling service methods
+  - FOLLOW pattern: src/tools/existing_tool.py (FastMCP tool structure)
+  - NAMING: snake_case file name, descriptive tool function name
+  - DEPENDENCIES: Import service from Task 2
+  - PLACEMENT: Tool layer in src/tools/
 
-Task N:
-...
+Task 4: MODIFY src/main.py or src/server.py
+  - INTEGRATE: Register new tool with MCP server
+  - FIND pattern: existing tool registrations
+  - ADD: Import and register new tool following existing pattern
+  - PRESERVE: Existing tool registrations and server configuration
 
+Task 5: CREATE src/services/tests/test_{domain}_service.py
+  - IMPLEMENT: Unit tests for all service methods (happy path, edge cases, error handling)
+  - FOLLOW pattern: src/services/tests/test_existing_service.py (fixture usage, assertion patterns)
+  - NAMING: test_{method}_{scenario} function naming
+  - COVERAGE: All public methods with positive and negative test cases
+  - PLACEMENT: Tests alongside the code they test
+
+Task 6: CREATE src/tools/tests/test_{action}_{resource}.py
+  - IMPLEMENT: Unit tests for MCP tool functionality
+  - FOLLOW pattern: src/tools/tests/test_existing_tool.py (MCP tool testing approach)
+  - MOCK: External service dependencies
+  - COVERAGE: Tool input validation, success responses, error handling
+  - PLACEMENT: Tool tests in src/tools/tests/
 ```
 
-### Per task pseudocode as needed added to each task
+### Implementation Patterns & Key Details
 
 ```python
+# Show critical patterns and gotchas - keep concise, focus on non-obvious details
 
-# Task 1
-# Pseudocode with CRITICAL details don't write entire code
-async def new_feature(param: str) -> Result:
-    # PATTERN: Always validate input first (see src/validators.py)
-    validated = validate_input(param)  # raises ValidationError
+# Example: Service method pattern
+async def {domain}_operation(self, request: {Domain}Request) -> {Domain}Response:
+    # PATTERN: Input validation first (follow src/services/existing_service.py)
+    validated = self.validate_request(request)
 
-    # GOTCHA: This library requires connection pooling
-    async with get_connection() as conn:  # see src/db/pool.py
-        # PATTERN: Use existing retry decorator
-        @retry(attempts=3, backoff=exponential)
-        async def _inner():
-            # CRITICAL: API returns 429 if >10 req/sec
-            await rate_limiter.acquire()
-            return await external_api.call(validated)
+    # GOTCHA: [Library-specific constraint or requirement]
+    # PATTERN: Error handling approach (reference existing service pattern)
+    # CRITICAL: [Non-obvious requirement or configuration detail]
 
-        result = await _inner()
+    return {Domain}Response(status="success", data=result)
 
-    # PATTERN: Standardized response format
-    return format_response(result)  # see src/utils/responses.py
+# Example: MCP tool pattern
+@app.tool()
+async def {tool_name}({parameters}) -> str:
+    # PATTERN: Tool validation and service delegation (see src/tools/existing_tool.py)
+    # RETURN: JSON string with standardized response format
 ```
 
 ### Integration Points
@@ -152,83 +179,130 @@ ROUTES:
 
 ## Validation Loop
 
-### Level 1: Syntax & Style
+### Level 1: Syntax & Style (Immediate Feedback)
 
 ```bash
-# Run these FIRST - fix any errors before proceeding
-ruff check src/new_feature.py --fix  # Auto-fix what's possible
-mypy src/new_feature.py              # Type checking
+# Run after each file creation - fix before proceeding
+ruff check src/{new_files} --fix     # Auto-format and fix linting issues
+mypy src/{new_files}                 # Type checking with specific files
+ruff format src/{new_files}          # Ensure consistent formatting
 
-# Expected: No errors. If errors, READ the error and fix.
+# Project-wide validation
+ruff check src/ --fix
+mypy src/
+ruff format src/
+
+# Expected: Zero errors. If errors exist, READ output and fix before proceeding.
 ```
 
-### Level 2: Unit Tests each new feature/file/function use existing test patterns
-
-```python
-# CREATE test_new_feature.py with these test cases:
-def test_happy_path():
-    """Basic functionality works"""
-    result = new_feature("valid_input")
-    assert result.status == "success"
-
-def test_validation_error():
-    """Invalid input raises ValidationError"""
-    with pytest.raises(ValidationError):
-        new_feature("")
-
-def test_external_api_timeout():
-    """Handles timeouts gracefully"""
-    with mock.patch('external_api.call', side_effect=TimeoutError):
-        result = new_feature("valid")
-        assert result.status == "error"
-        assert "timeout" in result.message
-```
+### Level 2: Unit Tests (Component Validation)
 
 ```bash
-# Run and iterate until passing:
-uv run pytest test_new_feature.py -v
-# If failing: Read error, understand root cause, fix code, re-run (never mock to pass)
+# Test each component as it's created
+uv run pytest src/services/tests/test_{domain}_service.py -v
+uv run pytest src/tools/tests/test_{action}_{resource}.py -v
+
+# Full test suite for affected areas
+uv run pytest src/services/tests/ -v
+uv run pytest src/tools/tests/ -v
+
+# Coverage validation (if coverage tools available)
+uv run pytest src/ --cov=src --cov-report=term-missing
+
+# Expected: All tests pass. If failing, debug root cause and fix implementation.
 ```
 
-### Level 3: Integration Test
+### Level 3: Integration Testing (System Validation)
 
 ```bash
-# Start the service
-uv run python -m src.main --dev
+# Service startup validation
+uv run python main.py &
+sleep 3  # Allow startup time
 
-# Test the endpoint
-curl -X POST http://localhost:8000/feature \
+# Health check validation
+curl -f http://localhost:8000/health || echo "Service health check failed"
+
+# Feature-specific endpoint testing
+curl -X POST http://localhost:8000/{your_endpoint} \
   -H "Content-Type: application/json" \
-  -d '{"param": "test_value"}'
+  -d '{"test": "data"}' \
+  | jq .  # Pretty print JSON response
 
-# Expected: {"status": "success", "data": {...}}
-# If error: Check logs at logs/app.log for stack trace
+# MCP server validation (if MCP-based)
+# Test MCP tool functionality
+echo '{"method": "tools/call", "params": {"name": "{tool_name}", "arguments": {}}}' | \
+  uv run python -m src.main
+
+# Database validation (if database integration)
+# Verify database schema, connections, migrations
+psql $DATABASE_URL -c "SELECT 1;" || echo "Database connection failed"
+
+# Expected: All integrations working, proper responses, no connection errors
 ```
 
-### Level 4: Deployment & Creative Validation
+### Level 4: Creative & Domain-Specific Validation
 
 ```bash
-# MCP servers or other creative validation methods
-# Examples:
-# - Load testing with realistic data
-# - End-to-end user journey testing
-# - Performance benchmarking
-# - Security scanning
-# - Documentation validation
+# MCP Server Validation Examples:
 
-# Custom validation specific to the feature
-# [Add creative validation methods here]
+# Playwright MCP (for web interfaces)
+playwright-mcp --url http://localhost:8000 --test-user-journey
+
+# Docker MCP (for containerized services)
+docker-mcp --build --test --cleanup
+
+# Database MCP (for data operations)
+database-mcp --validate-schema --test-queries --check-performance
+
+# Custom Business Logic Validation
+# [Add domain-specific validation commands here]
+
+# Performance Testing (if performance requirements)
+ab -n 100 -c 10 http://localhost:8000/{endpoint}
+
+# Security Scanning (if security requirements)
+bandit -r src/
+
+# Load Testing (if scalability requirements)
+# wrk -t12 -c400 -d30s http://localhost:8000/{endpoint}
+
+# API Documentation Validation (if API endpoints)
+# swagger-codegen validate -i openapi.json
+
+# Expected: All creative validations pass, performance meets requirements
 ```
 
-## Final validation Checklist
+## Final Validation Checklist
 
-- [ ] All tests pass: `uv run pytest tests/ -v`
+### Technical Validation
+
+- [ ] All 4 validation levels completed successfully
+- [ ] All tests pass: `uv run pytest src/ -v`
 - [ ] No linting errors: `uv run ruff check src/`
 - [ ] No type errors: `uv run mypy src/`
-- [ ] Manual test successful: [specific curl/command]
-- [ ] Error cases handled gracefully
+- [ ] No formatting issues: `uv run ruff format src/ --check`
+
+### Feature Validation
+
+- [ ] All success criteria from "What" section met
+- [ ] Manual testing successful: [specific commands from Level 3]
+- [ ] Error cases handled gracefully with proper error messages
+- [ ] Integration points work as specified
+- [ ] User persona requirements satisfied (if applicable)
+
+### Code Quality Validation
+
+- [ ] Follows existing codebase patterns and naming conventions
+- [ ] File placement matches desired codebase tree structure
+- [ ] Anti-patterns avoided (check against Anti-Patterns section)
+- [ ] Dependencies properly managed and imported
+- [ ] Configuration changes properly integrated
+
+### Documentation & Deployment
+
+- [ ] Code is self-documenting with clear variable/function names
 - [ ] Logs are informative but not verbose
-- [ ] Documentation updated if needed
+- [ ] Environment variables documented if new ones added
 
 ---
 
