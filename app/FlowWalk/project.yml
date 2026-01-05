@@ -1,0 +1,86 @@
+name: FlowWalk
+options:
+  bundleIdPrefix: com.flowwalk
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+  xcodeVersion: "16.0"
+
+settings:
+  SWIFT_VERSION: "6.0"
+  IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+
+targets:
+  FlowWalk:
+    type: application
+    platform: iOS
+    sources:
+      - FlowWalk
+    settings:
+      INFOPLIST_FILE: FlowWalk/Info.plist
+      PRODUCT_BUNDLE_IDENTIFIER: com.flowwalk.app
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    info:
+      path: FlowWalk/Info.plist
+      properties:
+        CFBundleDisplayName: FlowWalk
+        CFBundleIdentifier: com.flowwalk.app
+        CFBundleVersion: "1.0"
+        CFBundleShortVersionString: "1.0"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        NSHealthShareUsageDescription: "FlowWalk needs access to your heart rate data to provide mindful walking guidance."
+        NSHealthUpdateUsageDescription: "FlowWalk will save your walking session data to help track your mindfulness progress."
+        NSLocationWhenInUseUsageDescription: "FlowWalk uses your location to track walking distance and provide route guidance."
+        NSLocationAlwaysAndWhenInUseUsageDescription: "FlowWalk uses your location to track walking distance and provide route guidance."
+        NSMotionUsageDescription: "FlowWalk uses motion data to count steps and track your walking pace."
+        UIBackgroundModes:
+          - audio
+          - location
+          - background-processing
+        UIRequiredDeviceCapabilities:
+          - healthkit
+          - location-services
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+
+  FlowWalkTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - FlowWalkTests
+    dependencies:
+      - target: FlowWalk
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.flowwalk.app.tests
+
+schemes:
+  FlowWalk:
+    build:
+      targets:
+        FlowWalk: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - FlowWalkTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
